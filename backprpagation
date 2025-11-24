@@ -1,0 +1,100 @@
+import numpy as np
+
+# ------------------------------
+# Activation functions
+# ------------------------------
+
+def sigmoid(x):
+    """Squashes any number into range (0,1)"""
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_deriv(x):
+    """Derivative of sigmoid used in backpropagation"""
+    return x * (1 - x)
+
+
+# ------------------------------
+# Neural Network Class
+# ------------------------------
+
+class SimpleNN:
+    def __init__(self):
+        # Initialize weights randomly
+        # 2 inputs → 2 hidden neurons
+        self.w1 = np.random.randn(2, 2)    
+
+        # 2 hidden → 1 output neuron
+        self.w2 = np.random.randn(2, 1)
+
+        # Learning rate
+        self.alpha = 0.5
+
+    def forward(self, X):
+        """Forward pass"""
+        # Hidden layer
+        self.hidden_input = np.dot(X, self.w1)
+        self.hidden_output = sigmoid(self.hidden_input)
+
+        # Output layer
+        self.final_input = np.dot(self.hidden_output, self.w2)
+        self.final_output = sigmoid(self.final_input)
+
+        return self.final_output
+
+    def backward(self, X, y):
+        """Backward pass (backpropagation)"""
+
+        # Error at output layer
+        error = y - self.final_output
+
+        # Delta for output (error * activation_derivative)
+        d_output = error * sigmoid_deriv(self.final_output)
+
+        # Error for hidden layer
+        hidden_error = d_output.dot(self.w2.T)
+
+        # Delta for hidden layer
+        d_hidden = hidden_error * sigmoid_deriv(self.hidden_output)
+
+        # Update weights
+        self.w2 += self.hidden_output.T.dot(d_output) * self.alpha
+        self.w1 += X.T.dot(d_hidden) * self.alpha
+
+    def train(self, X, y, epochs=10000):
+        for i in range(epochs):
+            self.forward(X)     # Forward propagation
+            self.backward(X, y) # Backpropagation
+
+
+# ------------------------------
+# XOR Dataset
+# ------------------------------
+
+X = np.array([[0, 0],
+              [0, 1],
+              [1, 0],
+              [1, 1]])
+
+y = np.array([[0],
+              [1],
+              [1],
+              [0]])
+
+
+# ------------------------------
+# Train the Network
+# ------------------------------
+
+nn = SimpleNN()
+nn.train(X, y)
+
+# ------------------------------
+# Test the Network
+# ------------------------------
+
+print("Predictions:")
+output = nn.forward(X)
+print(output)
+
+print("\nBinary Output:")
+print((output > 0.5).astype(int))
